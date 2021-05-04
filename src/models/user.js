@@ -36,11 +36,12 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     validate(value) {
-      if (value < 0) {
-        throw new Error("Age must be a postive number");
+      if (value < 18) {
+        throw new Error("Your must be 18+ to use this service");
       }
     },
   },
+  cryptoKeyPair: {},
   tokens: [
     {
       token: {
