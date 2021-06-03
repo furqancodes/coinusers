@@ -11,12 +11,14 @@ router.get("/usersignup", () => {
 router.post("/users/signup", async (req, res) => {
   const { name, email, password, age } = req.body;
   console.log(req.body);
-  try {
-    const keypair = await axios.get("localhost:3496/api/createwallet");
-    console.log(keypair);
-  } catch (error) {
-    console.log(error);
-  }
+  // try {
+  //   const keypair = await axios.post(
+  //     "https://cyrpto.herokuapp.com/api/createwallet"
+  //   );
+  //   console.log(keypair);
+  // } catch (error) {
+  //   console.log(error);
+  // }
 
   let user = new User({ name, email, password, age });
   try {
