@@ -17,10 +17,10 @@ const port = process.env.PORT || 8080;
 // app.use((req, res, next) => {
 //     res.status(503).send('Site is currently down. Check back soon!')
 // })
+app.use(cors());
 
 app.use(express.json());
 app.use(userRouter);
-app.use(cors());
 
 app.listen(port, () => {
   console.log("Server is up on port " + port);
