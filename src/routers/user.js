@@ -10,7 +10,7 @@ router.get("/usersignup", () => {
 });
 router.post("/users/signup", async (req, res) => {
   const { name, email, password, age } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   // try {
   //   const keypair = await axios.post(
   //     "https://cyrpto.herokuapp.com/api/createwallet"
@@ -38,6 +38,7 @@ router.post("/users/login", async (req, res) => {
     );
     const token = await user.generateAuthToken();
     res.send({ user, token });
+    // res.redirect("/profile");
   } catch (e) {
     res.status(400).send();
   }
