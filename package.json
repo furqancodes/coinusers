@@ -1,5 +1,5 @@
 {
-  "name": "crypto-users",
+  "name": "coinusers",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "dev": "nodemon src/index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Furqan Ashraf",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
