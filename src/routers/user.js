@@ -35,7 +35,32 @@ router.post("/users/login", async (req, res) => {
     res.status(400).send();
   }
 });
+// -------------------transfer-----------------
 
+router.post("/users/transfer", auth, async (req, res) => {
+  const { amount, senderEmail, recipientEmail } = req.body;
+  // console.log(req.body);
+  try {
+    const sender = await User.findOne({
+      email: senderEmail,
+    });
+    const recipient = await User.findOne({
+      email: recipientEmail,
+    });
+    // console.log("sender" + sender.publicKey);
+    const response = await axios.post(config.REQUEST_URL + "/transfer", {
+      amount,
+      recipient: recipient.publicKey,
+      senderPublicKey: sender.publicKey,
+    });
+    console.log(response.data);
+    res.send(response.data);
+  } catch (error) {
+    res.status(404).send(error);
+  }
+});
+
+// ------------------logout------------------
 router.post("/users/logout", auth, async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter((token) => {
