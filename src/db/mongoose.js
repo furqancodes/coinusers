@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://127.0.0.1:27017/crypto-users", {
+mongoose.connect("mongodb+srv://admin:TrtZCuSISXnkH6Ru@cluster0.lfwbr.mongodb.net/coinusers?retryWrites=true&w=majority", {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
