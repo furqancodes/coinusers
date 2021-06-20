@@ -1,31 +1,23 @@
 const express = require("express");
 const User = require("../models/user");
 const auth = require("../middleware/auth");
+const config = require("../../config");
 const axios = require("axios");
 const router = new express.Router();
 
 //-------------------signUp---------------
-router.get("/usersignup", () => {
-  res.send({ Message: "Signupage" });
-});
 router.post("/users/signup", async (req, res) => {
   const { name, email, password, age } = req.body;
   // console.log(req.body);
-  // try {
-  //   const keypair = await axios.post(
-  //     "https://cyrpto.herokuapp.com/api/createwallet"
-  //   );
-  //   console.log(keypair);
-  // } catch (error) {
-  //   console.log(error);
-  // }
-
-  let user = new User({ name, email, password, age });
   try {
+    const response = await axios.post(config.REQUEST_URL + "/wallet");
+    const { publicKey } = response.data;
+    let user = new User({ name, email, password, age, publicKey });
     await user.save();
     const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
-  } catch (e) {
+  } catch (error) {
+    console.log(error);
     res.status(400).send(e);
   }
 });
@@ -68,7 +60,18 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 });
 
 router.get("/users/me", auth, async (req, res) => {
-  res.send(req.user);
+  try {
+    const response = await axios.get(
+      config.REQUEST_URL + "/wallet/" + req.user.publicKey,
+      {
+        params: { publicKey: req.user.publicKey },
+      }
+    );
+    // console.log(response.data);
+    res.send({ user: req.user, wallet: response.data });
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 router.patch("/users/me", auth, async (req, res) => {

@@ -50,7 +50,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    cryptoKeyPair: {},
+    publicKey: {
+      type: String,
+    },
     tokens: [
       {
         token: {
