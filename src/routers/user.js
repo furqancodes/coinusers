@@ -84,6 +84,17 @@ router.post("/users/logoutAll", auth, async (req, res) => {
   }
 });
 
+// -------------------------users------------------
+
+router.get("/users/all", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.send(users);
+  } catch (error) {
+    res.status(404).send(error);
+  }
+});
+
 router.get("/users/me", auth, async (req, res) => {
   try {
     const response = await axios.get(
