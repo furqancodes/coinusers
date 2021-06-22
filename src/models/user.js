@@ -53,6 +53,11 @@ const userSchema = new mongoose.Schema(
     publicKey: {
       type: String,
     },
+    userType: {
+      type: String,
+      default: "User",
+    },
+    beneficiaries: [{ beneficiary: { type: String } }],
     tokens: [
       {
         token: {
