@@ -30,11 +30,14 @@ router.post("/users/login", async (req, res) => {
       req.body.email,
       req.body.password
     );
+    if (!user.verified) {
+      throw new Error("Please verify email");
+    }
     const token = await user.generateAuthToken();
     res.send({ user, token });
     // res.redirect("/profile");
   } catch (e) {
-    res.status(400).send();
+    res.status(400).send({ Error: e.message });
   }
 });
 // -------------------transfer-----------------
@@ -72,7 +75,7 @@ router.post("/users/logout", auth, async (req, res) => {
 
     res.send();
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send(e.message);
   }
 });
 
@@ -82,7 +85,7 @@ router.post("/users/logoutAll", auth, async (req, res) => {
     await req.user.save();
     res.send();
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send(e.message);
   }
 });
 //----------------------------beneficiary-----------
@@ -116,7 +119,7 @@ router.get("/users/all", auth, authorize, async (req, res) => {
     const users = await User.find();
     res.send(users);
   } catch (error) {
-    res.status(404).send(error);
+    res.status(404).send(error.message);
   }
 });
 router.patch("/users/:userEmail", auth, authorize, async (req, res) => {
@@ -136,7 +139,7 @@ router.patch("/users/:userEmail", auth, authorize, async (req, res) => {
     await user.save();
     res.send(user);
   } catch (e) {
-    res.status(400).send(e);
+    res.status(400).send(e.message);
   }
 });
 
@@ -159,15 +162,7 @@ router.get("/users/me", auth, async (req, res) => {
 
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = [
-    "name",
-    "email",
-    "password",
-    "age",
-    "verified",
-    "activated",
-    "beneficiaries",
-  ];
+  const allowedUpdates = ["name", "email", "password", "age", "beneficiaries"];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
@@ -181,7 +176,7 @@ router.patch("/users/me", auth, async (req, res) => {
     await req.user.save();
     res.send(req.user);
   } catch (e) {
-    res.status(400).send(e);
+    res.status(400).send(e.message);
   }
 });
 
@@ -190,7 +185,7 @@ router.delete("/users/me", auth, async (req, res) => {
     await req.user.remove();
     res.send(req.user);
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send(e.message);
   }
 });
 

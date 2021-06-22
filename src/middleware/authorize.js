@@ -26,7 +26,7 @@ const authorize = async (req, res, next) => {
     req.user = user;
     next();
   } catch (e) {
-    res.status(401).send({ error: e });
+    res.status(401).send({ error: e.message });
   }
 };
 
