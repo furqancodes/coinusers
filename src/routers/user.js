@@ -80,13 +80,36 @@ router.post("/users/logoutAll", auth, async (req, res) => {
     await req.user.save();
     res.send();
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
+//----------------------------beneficiary-----------
 
-// -------------------------users------------------
+router.get("/user/beneficiaryList", auth, async (req, res) => {
+  try {
+    res.send(req.user.beneficiaries);
+  } catch (error) {
+    res.status(404).send(error);
+  }
+});
+router.delete("/user/:beneficiary", auth, async (req, res) => {
+  const beneficiary = req.params.beneficiary;
+  try {
+    let removeIndex = req.user.beneficiaries
+      .map(function (block) {
+        return block.beneficiary;
+      })
+      .indexOf(beneficiary);
+    req.user.beneficiaries.splice(removeIndex, 1);
 
-router.get("/users/all", async (req, res) => {
+    res.send(req.user.beneficiaries);
+  } catch (error) {
+    res.status(404).send(error);
+  }
+});
+// -------------------------admin routes------------------
+
+router.get("/users/all", auth, async (req, res) => {
   try {
     const users = await User.find();
     res.send(users);
@@ -94,6 +117,28 @@ router.get("/users/all", async (req, res) => {
     res.status(404).send(error);
   }
 });
+router.patch("/users/:userEmail", auth, async (req, res) => {
+  const user = await User.findOne({ email: req.params.userEmail });
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["verified", "activated"];
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid updates!" });
+  }
+
+  try {
+    updates.forEach((update) => (user[update] = req.body[update]));
+    await user.save();
+    res.send(user);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+// -------------------------users routes------------------
 
 router.get("/users/me", auth, async (req, res) => {
   try {
@@ -112,7 +157,15 @@ router.get("/users/me", auth, async (req, res) => {
 
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "email", "password", "age"];
+  const allowedUpdates = [
+    "name",
+    "email",
+    "password",
+    "age",
+    "verified",
+    "activated",
+    "beneficiaries",
+  ];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
