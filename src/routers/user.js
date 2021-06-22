@@ -1,6 +1,8 @@
 const express = require("express");
 const User = require("../models/user");
 const auth = require("../middleware/auth");
+const authorize = require("../middleware/authorize");
+
 const config = require("../../config");
 const axios = require("axios");
 const router = new express.Router();
@@ -109,7 +111,7 @@ router.delete("/user/:beneficiary", auth, async (req, res) => {
 });
 // -------------------------admin routes------------------
 
-router.get("/users/all", auth, async (req, res) => {
+router.get("/users/all", auth, authorize, async (req, res) => {
   try {
     const users = await User.find();
     res.send(users);
@@ -117,7 +119,7 @@ router.get("/users/all", auth, async (req, res) => {
     res.status(404).send(error);
   }
 });
-router.patch("/users/:userEmail", auth, async (req, res) => {
+router.patch("/users/:userEmail", auth, authorize, async (req, res) => {
   const user = await User.findOne({ email: req.params.userEmail });
   const updates = Object.keys(req.body);
   const allowedUpdates = ["verified", "activated"];
