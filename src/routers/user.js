@@ -19,7 +19,7 @@ router.post("/users/signup", async (req, res) => {
     res.status(201).send({ user, token });
   } catch (error) {
     console.log(error);
-    res.status(400).send(e);
+    res.status(400).send(error);
   }
 });
 //--------------------login----------------
@@ -89,15 +89,18 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 });
 //----------------------------beneficiary-----------
 
-router.get("/user/beneficiaryList", auth, async (req, res) => {
+router.get("/users/beneficiaryList", auth, async (req, res) => {
   try {
     res.send(req.user.beneficiaries);
   } catch (error) {
     res.status(404).send(error);
   }
 });
-router.delete("/user/:beneficiary", auth, async (req, res) => {
-  const beneficiary = req.params.beneficiary;
+router.delete("/users/beneficiary/:beneficiary", auth, async (req, res) => {
+  // console.log(req);decodeURIComponent('JavaScript_%D1%88%D0%B5%D0%BB%D0%BB%D1%8B')
+  console.log(req.params);
+  console.log(decodeURIComponent(req.params.beneficiary));
+  const beneficiary = decodeURIComponent(req.params.beneficiary);
   try {
     let removeIndex = req.user.beneficiaries
       .map(function (block) {
@@ -105,8 +108,8 @@ router.delete("/user/:beneficiary", auth, async (req, res) => {
       })
       .indexOf(beneficiary);
     req.user.beneficiaries.splice(removeIndex, 1);
-
-    res.send(req.user.beneficiaries);
+    await req.user.save();
+    res.send(req.user);
   } catch (error) {
     res.status(404).send(error);
   }
@@ -121,7 +124,7 @@ router.get("/users/all", auth, authorize, async (req, res) => {
     res.status(404).send(error.message);
   }
 });
-router.patch("/users/:userEmail", auth, authorize, async (req, res) => {
+router.patch("/users/admin/:userEmail", auth, authorize, async (req, res) => {
   const user = await User.findOne({ email: req.params.userEmail });
   const updates = Object.keys(req.body);
   const allowedUpdates = ["verified", "activated"];
@@ -161,7 +164,7 @@ router.get("/users/me", auth, async (req, res) => {
 
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "email", "password", "age", "beneficiaries"];
+  const allowedUpdates = ["name", "email", "password", "age", "beneficiary"];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
@@ -171,7 +174,11 @@ router.patch("/users/me", auth, async (req, res) => {
   }
 
   try {
-    updates.forEach((update) => (req.user[update] = req.body[update]));
+    updates.forEach((update) =>
+      update !== "beneficiary"
+        ? (req.user[update] = req.body[update])
+        : req.user["beneficiaries"].push({ beneficiary: req.body[update] })
+    );
     await req.user.save();
     res.send(req.user);
   } catch (e) {
