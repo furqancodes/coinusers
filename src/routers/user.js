@@ -16,7 +16,7 @@ router.post("/users/signup", async (req, res) => {
     const { publicKey } = response.data;
     let user = new User({ name, email, password, age, publicKey });
     await user.save();
-    res.status(201).send({ user, token });
+    res.status(201).send({ user });
   } catch (error) {
     console.log(error);
     res.status(400).send(error);
@@ -140,6 +140,39 @@ router.patch("/users/admin/:userEmail", auth, authorize, async (req, res) => {
     res.send(user);
   } catch (e) {
     res.status(400).send(e.message);
+  }
+});
+
+// --------------------------get Transactions----------
+router.get("/users/transactions", auth, async (req, res) => {
+  try {
+    const response = await axios.get(
+      config.REQUEST_URL + "/wallet/" + req.user.publicKey,
+      {
+        params: { publicKey: req.user.publicKey },
+      }
+    );
+    const { transactions } = response.data;
+    const transactionsList = await Promise.all(
+      transactions.map(async (transaction) => {
+        // console.log(transaction);
+        const outputMap = [];
+        for (const property in transaction.outputMap) {
+          outputMap.push(property);
+        }
+        const receiver = await User.findOne({ publicKey: outputMap[0] });
+        const sender = await User.findOne({ publicKey: outputMap[1] });
+        return {
+          sender: sender.email,
+          receiver: receiver.email,
+          amount: transaction.input.sendAmount,
+        };
+      })
+    );
+
+    res.send({ transactionsList: transactionsList });
+  } catch (error) {
+    res.status(500).send(error);
   }
 });
 
