@@ -162,10 +162,21 @@ router.get("/users/transactions", auth, async (req, res) => {
         }
         const receiver = await User.findOne({ publicKey: outputMap[0] });
         const sender = await User.findOne({ publicKey: outputMap[1] });
+        const date = new Date(transaction.input.timestamp);
+        const dateFull =
+          date.getDate() +
+          "/" +
+          (date.getMonth() + 1) +
+          "/" +
+          date.getFullYear();
+        const time =
+          date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
         return {
           sender: sender.email,
           receiver: receiver.email,
           amount: transaction.input.sendAmount,
+          date: dateFull,
+          time,
         };
       })
     );
