@@ -11,12 +11,11 @@ const {sendEmail, validateToken} = require('../utils/verify')
 // -------------------signUp---------------
 router.post('/users/signup', async (req, res) => {
   const {name, email, password, age} = req.body
-  console.log('name, email', name, email)
+  console.info('creating new user', email)
   try {
     const user = await User.findOne({email})
 
     if (user) {
-      console.log('user already exist', user)
       throw new Error('user already exists')
     } else {
       const response = await axios.post(config.COINCRYPTO_URL + '/wallet')

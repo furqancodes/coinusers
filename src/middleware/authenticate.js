@@ -18,7 +18,6 @@ const authenticate = async (req, res, next) => {
 
     req.token = token
     req.user = user
-    console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl} ${req.user.email}`)
     next()
   } catch (error) {
     console.log(`auth error ${error}`)
