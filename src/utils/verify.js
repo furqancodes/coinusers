@@ -2,7 +2,7 @@
 const nodeMailjet = require('node-mailjet')
 const bcrypt = require('bcryptjs')
 
-const {MJ: {APIKEY_PUBLIC, APIKEY_PRIVATE}, COINCHAIN_URL} = require('../../config')
+const {MJ: {APIKEY_PUBLIC, APIKEY_PRIVATE}, COINUSERS_URL} = require('../../config')
 const mailjet = nodeMailjet.connect(APIKEY_PUBLIC, APIKEY_PRIVATE)
 
 const generateToken = async (userId) => {
@@ -16,7 +16,7 @@ const validateToken = async (userId, token) => {
 const sendEmail = async (userId, userEmail, userName) => {
   console.info('sending email to', userId, userEmail, userName)
   const token = await generateToken(userId)
-  const link = `${COINCHAIN_URL}/verify?id=${userId}&token=${token}`
+  const link = `${COINUSERS_URL}/users/verify?id=${userId}&token=${token}`
   const request = mailjet
     .post('send', {'version': 'v3.1'})
     .request({

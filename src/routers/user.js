@@ -18,9 +18,7 @@ router.post('/users/signup', async (req, res) => {
     if (user) {
       throw new Error('user already exists')
     } else {
-      const response = await axios.post(config.COINCRYPTO_URL + '/wallet')
-      const {publicKey} = response.data
-      const user = await new User({name, email, password, age, publicKey}).save()
+      const user = await new User({name, email, password, age}).save()
       await sendEmail(user.id, email, name)
       res.status(201).send({user})
     }
@@ -206,12 +204,14 @@ router.get('/users/verify', async (req, res) => {
     console.info(`verifying user ${id}`)
     const token = req.query.token
     const valid = validateToken(id, token)
-    if (valid) {
-      const user = await User.findOneAndUpdate({_id: id, verified: false}, {verified: true})
-      if (user) {
-        console.info(`user verified ${id}`)
-        return res.json({message: 'account verified'}).send()
-      }
+    const user = await User.findOne({_id: id, verified: false})
+    if (valid && user) {
+      const {data: {publicKey}} = await axios.post(config.COINCRYPTO_URL + '/wallet')
+      user.publicKey = publicKey
+      user.verified = true
+      await user.save()
+      console.info(`user verified ${id}`)
+      return res.json({message: 'account verified'}).send()
     }
     console.error(`user not verified ${id} valid:${valid}`)
     res.status(403).send()
