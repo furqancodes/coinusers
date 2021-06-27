@@ -6,7 +6,7 @@ module.exports = {
   COINUSERS_URL: isDevelopment ?
     'http://localhost:8080' :
     'https://coinusers-app.herokuapp.com',
-  COINCRYPTO_URL: !isDevelopment ?
+  COINCRYPTO_URL: isDevelopment ?
     'http://localhost:3000' :
     'https://coincrypto-app.herokuapp.com',
   COINCHAIN_URL: isDevelopment ?
