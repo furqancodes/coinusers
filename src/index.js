@@ -1,29 +1,19 @@
 require('dotenv').config()
+const express = require('express')
+const cors = require('cors')
+const morgan = require('morgan')
+
 const config = require('../config')
+require('./db/mongoose')
+const userRouter = require('./routers/user')
 
+const app = express()
+app.use(morgan('[:date[clf]] :method :url :status :res[content-length] - :response-time ms'))
+app.use(cors())
 
-const express = require("express");
-require("./db/mongoose");
-const userRouter = require("./routers/user");
-
-const cors = require("cors");
-const app = express();
-// app.use((req, res, next) => {
-//     if (req.method === 'GET') {
-//         res.send('GET requests are disabled')
-//     } else {
-//         next()
-//     }
-// })
-
-// app.use((req, res, next) => {
-//     res.status(503).send('Site is currently down. Check back soon!')
-// })
-app.use(cors());
-
-app.use(express.json());
-app.use(userRouter);
+app.use(express.json())
+app.use(userRouter)
 
 app.listen(config.DEFAULT_PORT, () => {
-  console.log(`listening on ${config.URL}`);
-});
+  console.log(`listening on ${config.COINUSERS_URL}`)
+})

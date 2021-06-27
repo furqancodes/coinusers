@@ -1,7 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
-mongoose.connect("mongodb+srv://admin:TrtZCuSISXnkH6Ru@cluster0.lfwbr.mongodb.net/coinusers?retryWrites=true&w=majority", {
+const {DATABASE: {URL}} = require('../../config')
+
+mongoose.connect(URL, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
-});
+  useUnifiedTopology: true,
+})
