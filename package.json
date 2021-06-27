@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "cross-env NODE_ENV='development' nodemon src/index.js"
+    "dev": "cross-env NODE_ENV='development' nodemon src/index.js",
+    "lint": "node_modules\\.bin\\eslint ./ --fix"
   },
   "keywords": [],
   "author": "Furqan Ashraf",
@@ -20,9 +21,17 @@
     "jsonwebtoken": "^8.4.0",
     "mongodb": "^3.1.10",
     "mongoose": "^5.3.16",
+    "node-mailjet": "^3.3.4",
     "validator": "^10.9.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.9"
+    "eslint": "^7.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "nodemon": "^2.0.7"
   }
 }
