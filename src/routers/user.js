@@ -12,14 +12,20 @@ router.post("/users/signup", async (req, res) => {
   const { name, email, password, age } = req.body;
   // console.log(req.body);
   try {
-    const response = await axios.post(config.REQUEST_URL + "/wallet");
-    const { publicKey } = response.data;
-    let user = new User({ name, email, password, age, publicKey });
-    await user.save();
-    res.status(201).send({ user });
+    let alreadyUser = await User.findOne({ email });
+    console.log(alreadyUser);
+    if (alreadyUser) {
+      throw new Error("user already exists");
+    } else {
+      const response = await axios.post(config.REQUEST_URL + "/wallet");
+      const { publicKey } = response.data;
+      let user = new User({ name, email, password, age, publicKey });
+      await user.save();
+      res.status(201).send({ user });
+    }
   } catch (error) {
-    console.log(error);
-    res.status(400).send(error);
+    console.log(error + "error");
+    res.status(404).send(error);
   }
 });
 //--------------------login----------------
@@ -153,6 +159,7 @@ router.get("/users/transactions", auth, async (req, res) => {
       }
     );
     const { transactions } = response.data;
+    // console.log(transactions);
     const transactionsList = await Promise.all(
       transactions.map(async (transaction) => {
         // console.log(transaction);
@@ -163,6 +170,7 @@ router.get("/users/transactions", auth, async (req, res) => {
         const receiver = await User.findOne({ publicKey: outputMap[0] });
         const sender = await User.findOne({ publicKey: outputMap[1] });
         const date = new Date(transaction.input.timestamp);
+        const type = sender.email === req.user.email ? "Debit" : "Credit";
         const dateFull =
           date.getDate() +
           "/" +
@@ -171,19 +179,27 @@ router.get("/users/transactions", auth, async (req, res) => {
           date.getFullYear();
         const time =
           date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+        // console.log({
+        //   sender: sender.email,
+        //   receiver: receiver.email,
+        //   amount: transaction.input.sendAmount,
+        //   type,
+        //   date: dateFull,
+        //   time,
+        // });
         return {
           sender: sender.email,
           receiver: receiver.email,
           amount: transaction.input.sendAmount,
+          type,
           date: dateFull,
           time,
         };
       })
     );
-
     res.send({ transactionsList: transactionsList });
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send(error.response);
   }
 });
 
@@ -206,7 +222,7 @@ router.get("/users/me", auth, async (req, res) => {
 
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "email", "password", "age", "beneficiary"];
+  const allowedUpdates = ["name", "password", "age", "beneficiary"];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
@@ -214,17 +230,21 @@ router.patch("/users/me", auth, async (req, res) => {
   if (!isValidOperation) {
     return res.status(400).send({ error: "Invalid updates!" });
   }
-
+  // console.log(req.user.beneficiaries);
   try {
-    updates.forEach((update) =>
-      update !== "beneficiary"
-        ? (req.user[update] = req.body[update])
-        : req.user["beneficiaries"].push({ beneficiary: req.body[update] })
-    );
+    updates.forEach((update) => {
+      if (update !== "beneficiary") {
+        return (req.user[update] = req.body[update]);
+      } else if (update === "beneficiary") {
+        return req.user["beneficiaries"].push({
+          beneficiary: req.body[update],
+        });
+      }
+    });
     await req.user.save();
     res.send(req.user);
   } catch (e) {
-    res.status(400).send(e.message);
+    res.status(400).send(e);
   }
 });
 
