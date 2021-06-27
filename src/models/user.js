@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
     },
     age: {
       type: Number,
-      default: 0,
+      min: 18,
       validate(value) {
         if (value < 18 && value > 100) {
           throw new Error("Your must be 18+ to use this service");
