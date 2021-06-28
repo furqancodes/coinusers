@@ -6,7 +6,7 @@ const User = require('../models/user')
 const authenticate = require('../middleware/authenticate')
 const authorize = require('../middleware/authorize')
 const config = require('../../config')
-const {sendEmail, validateToken} = require('../utils/verify')
+const {sendVerificationEmail, validateToken, sendTransactionEmail} = require('../utils/mail')
 
 // -------------------signUp---------------
 router.post('/users/signup', async (req, res) => {
@@ -19,7 +19,7 @@ router.post('/users/signup', async (req, res) => {
       throw new Error('user already exists')
     } else {
       const user = await new User({name, email, password, age}).save()
-      await sendEmail(user.id, email, name)
+      await sendVerificationEmail(user.id, email, name)
       res.status(201).send({user})
     }
   } catch (e) {
@@ -60,6 +60,8 @@ router.post('/users/transfer', authenticate, async (req, res) => {
       recipient: recipient.publicKey,
       senderPublicKey: sender.publicKey,
     })
+    await sendTransactionEmail(senderEmail, sender.name, recipient.name, 'sent', amount)
+    await sendTransactionEmail(recipientEmail, recipient.name, sender.name, 'received', amount)
     res.send(response.data)
   } catch (e) {
     console.error(`post /users/transfer ${e} | ${e.stack} | ${e.response}`)
@@ -240,6 +242,7 @@ router.get('/users/me', authenticate, async (req, res) => {
 
 router.patch('/users/me', authenticate, async (req, res) => {
   const updates = Object.keys(req.body)
+  const {name, age, password, beneficiary} = req.body
   const allowedUpdates = ['name', 'password', 'age', 'beneficiary']
   const isValidOperation = updates.every(update => allowedUpdates.includes(update))
 
@@ -247,15 +250,17 @@ router.patch('/users/me', authenticate, async (req, res) => {
     return res.status(400).send({error: 'Invalid updates!'})
   }
   try {
-    updates.forEach((update) => {
-      if (update !== 'beneficiary') {
-        return (req.user[update] = req.body[update])
-      } else if (update === 'beneficiary') {
-        return req.user['beneficiaries'].push({
-          beneficiary: req.body[update],
-        })
-      }
-    })
+    req.user.name = name ? name : req.user.name
+    req.user.password = password ? password : req.user.password
+    req.user.age = age ? age : req.user.age
+    if (req.body.beneficiary) {
+      if (beneficiary === req.user.email) return res.status(400).send('Invalid beneficiary')
+      const user = await User.findOne({email: beneficiary})
+      const existing = req.user.beneficiaries.toObject().find(b => b.beneficiary === beneficiary)
+      if (!user || existing) return res.status(400).send('Invalid beneficiary')
+      req.user.beneficiaries.push({beneficiary})
+    }
+
     await req.user.save()
     res.send(req.user)
   } catch (e) {
