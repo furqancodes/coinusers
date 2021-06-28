@@ -14,7 +14,7 @@ const {
 
 // -------------------signUp---------------
 router.post('/users/signup', async (req, res) => {
-  const {name, email, password, age} = req.body
+  const {name, email, password, age,address} = req.body
   console.info('creating new user', email)
   try {
     const user = await User.findOne({email})
@@ -22,7 +22,7 @@ router.post('/users/signup', async (req, res) => {
     if (user) {
       throw new Error('user already exists')
     } else {
-      const user = await new User({name, email, password, age}).save()
+      const user = await new User({name, email, password, age, address}).save()
       await sendVerificationEmail(user.id, email, name)
       res.status(201).send({user})
     }

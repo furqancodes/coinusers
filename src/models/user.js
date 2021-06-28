@@ -33,6 +33,12 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
+    address:{
+      type: String,
+      required: true,
+      minlength: 7,
+      trim: true
+    },
     age: {
       type: Number,
       validate(value) {
