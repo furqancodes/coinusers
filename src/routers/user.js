@@ -6,7 +6,11 @@ const User = require('../models/user')
 const authenticate = require('../middleware/authenticate')
 const authorize = require('../middleware/authorize')
 const config = require('../../config')
-const {sendVerificationEmail, validateToken, sendTransactionEmail} = require('../utils/mail')
+const {
+  sendVerificationEmail,
+  validateToken,
+  sendTransactionEmail,
+} = require('../utils/mail')
 
 // -------------------signUp---------------
 router.post('/users/signup', async (req, res) => {
@@ -24,7 +28,7 @@ router.post('/users/signup', async (req, res) => {
     }
   } catch (e) {
     console.error(`post /users/signup ${e} | ${e.stack}`)
-    res.status(404).send(e)
+    res.status(404).send({Error: e.message})
   }
 })
 // --------------------login----------------
@@ -60,8 +64,20 @@ router.post('/users/transfer', authenticate, async (req, res) => {
       recipient: recipient.publicKey,
       senderPublicKey: sender.publicKey,
     })
-    await sendTransactionEmail(senderEmail, sender.name, recipient.name, 'sent', amount)
-    await sendTransactionEmail(recipientEmail, recipient.name, sender.name, 'received', amount)
+    await sendTransactionEmail(
+      senderEmail,
+      sender.name,
+      recipient.name,
+      'sent',
+      amount
+    )
+    await sendTransactionEmail(
+      recipientEmail,
+      recipient.name,
+      sender.name,
+      'received',
+      amount
+    )
     res.send(response.data)
   } catch (e) {
     console.error(`post /users/transfer ${e} | ${e.stack} | ${e.response}`)
@@ -132,27 +148,32 @@ router.get('/users/all', authenticate, authorize, async (req, res) => {
   }
 })
 
-router.patch('/users/admin/:userEmail', authenticate, authorize, async (req, res) => {
-  const user = await User.findOne({email: req.params.userEmail})
-  const updates = Object.keys(req.body)
-  const allowedUpdates = ['verified', 'activated']
-  const isValidOperation = updates.every(update =>
-    allowedUpdates.includes(update)
-  )
+router.patch(
+  '/users/admin/:userEmail',
+  authenticate,
+  authorize,
+  async (req, res) => {
+    const user = await User.findOne({email: req.params.userEmail})
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['verified', 'activated']
+    const isValidOperation = updates.every(update =>
+      allowedUpdates.includes(update)
+    )
 
-  if (!isValidOperation) {
-    return res.status(400).send({error: 'Invalid updates!'})
-  }
+    if (!isValidOperation) {
+      return res.status(400).send({error: 'Invalid updates!'})
+    }
 
-  try {
-    updates.forEach(update => (user[update] = req.body[update]))
-    await user.save()
-    res.send(user)
-  } catch (e) {
-    console.error(`patch /users/admin/:userEmail ${e} | ${e.stack}`)
-    res.status(400).send(e.message)
+    try {
+      updates.forEach(update => (user[update] = req.body[update]))
+      await user.save()
+      res.send(user)
+    } catch (e) {
+      console.error(`patch /users/admin/:userEmail ${e} | ${e.stack}`)
+      res.status(400).send(e.message)
+    }
   }
-})
+)
 
 // --------------------------get Transactions----------
 router.get('/users/transactions', authenticate, async (req, res) => {
@@ -173,7 +194,8 @@ router.get('/users/transactions', authenticate, async (req, res) => {
         const receiver = await User.findOne({publicKey: outputMap[0]})
         const sender = await User.findOne({publicKey: outputMap[1]})
         const date = new Date(transaction.input.timestamp)
-        const type = sender && sender.email === req.user.email ? 'Debit' : 'Credit'
+        const type =
+          sender && sender.email === req.user.email ? 'Debit' : 'Credit'
         const dateFull =
           date.getDate() +
           '/' +
@@ -208,7 +230,9 @@ router.get('/users/verify', async (req, res) => {
     const valid = validateToken(id, token)
     const user = await User.findOne({_id: id, verified: false})
     if (valid && user) {
-      const {data: {publicKey}} = await axios.post(config.COINCRYPTO_URL + '/wallet')
+      const {
+        data: {publicKey},
+      } = await axios.post(config.COINCRYPTO_URL + '/wallet')
       user.publicKey = publicKey
       user.verified = true
       await user.save()
@@ -244,7 +268,9 @@ router.patch('/users/me', authenticate, async (req, res) => {
   const updates = Object.keys(req.body)
   const {name, age, password, beneficiary} = req.body
   const allowedUpdates = ['name', 'password', 'age', 'beneficiary']
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update))
+  const isValidOperation = updates.every(update =>
+    allowedUpdates.includes(update)
+  )
 
   if (!isValidOperation) {
     return res.status(400).send({error: 'Invalid updates!'})
@@ -254,9 +280,12 @@ router.patch('/users/me', authenticate, async (req, res) => {
     req.user.password = password ? password : req.user.password
     req.user.age = age ? age : req.user.age
     if (req.body.beneficiary) {
-      if (beneficiary === req.user.email) return res.status(400).send('Invalid beneficiary')
+      if (beneficiary === req.user.email)
+        return res.status(400).send('Invalid beneficiary')
       const user = await User.findOne({email: beneficiary})
-      const existing = req.user.beneficiaries.toObject().find(b => b.beneficiary === beneficiary)
+      const existing = req.user.beneficiaries
+        .toObject()
+        .find(b => b.beneficiary === beneficiary)
       if (!user || existing) return res.status(400).send('Invalid beneficiary')
       req.user.beneficiaries.push({beneficiary})
     }
