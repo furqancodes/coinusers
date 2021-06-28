@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema(
     },
     activated: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     publicKey: {
       type: String,
